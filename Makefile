@@ -11,7 +11,7 @@ COM_STARTBAUD = 115200
 UART_LOG_BPS = 115200
 ##############################################################################
 # Source
-SRC_PATH = ./examples/simple_no_platformio
+SRC_PATH = ./src/
 SRC_PRJ = main.c
 
 INCLUDES = -I$(SRC_PATH)

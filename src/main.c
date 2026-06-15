@@ -1,9 +1,7 @@
-
-#include <types.h> /* for UNUSED */
+#include "types.h" /* for UNUSED */
 #include <driver/pwm/pwm.h>
 
 #include <log/log.h>
-
 #include "FreeRTOS.h"
 #include "task.h"
 
