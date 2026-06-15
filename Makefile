@@ -145,17 +145,17 @@ $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).map: $(OBJS) $(LDSCRIP
 	@echo OBJDUMP: $@
 	@$(OBJDUMP) -s -S $^ >$@
 
-%.o : %.c
+$(OBJ_DIR)/%.o : %.c
 	@echo CC: $<
-	@mkdir -p $(OBJ_DIR)/$(dir $@)
-	@$(CC) $(CFLAGS) $(INCFLAGS) -c $< -o $(OBJ_DIR)/$@
-	@$(CC) -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(OBJ_DIR)/$(patsubst %.o,%.d,$@)
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) $(INCFLAGS) -c $< -o $@
+	@$(CC) -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(patsubst %.o,%.d,$@)
 
-%.o : %.s
+$(OBJ_DIR)/%.o : %.s
 	@echo CC: $<
-	@mkdir -p $(OBJ_DIR)/$(dir $@)
-	@$(CC) $(CFLAGS) $(INCFLAGS) -c $< -o $(OBJ_DIR)/$@
-	@$(CC) -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(OBJ_DIR)/$(patsubst %.o,%.d,$@)
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) $(INCFLAGS) -c $< -o $@
+	@$(CC) -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(patsubst %.o,%.d,$@)
 
 flash: $(OBJ_DIR)/$(PROJECT_NAME).hex
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b $(COM_SPEED) -r wh $(OBJ_DIR)/$(PROJECT_NAME).hex
