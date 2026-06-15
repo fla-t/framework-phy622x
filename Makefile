@@ -5,7 +5,7 @@ FREERTOS ?= 1
 OFFLOAD_GPIO ?= 1
 BTSTACK ?= 0
 ##############################################################################
-COM_PORT = COM32
+COM_PORT = /dev/cu.usbserial-A23P67MJ
 COM_SPEED = 250000
 COM_STARTBAUD = 115200
 UART_LOG_BPS = 115200
@@ -127,11 +127,11 @@ DEPENDENCY_LIST = $(OBJS:%o=%d)
 ##############################################################################
 .PHONY: all directory clean size flash erase_and_flash
 
-all: directory $(GATT_OBJ) $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).hex $(BIN_OTA) $(OBJ_DIR)/$(PROJECT_NAME).asm size
+all: directory $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).hex $(BIN_OTA) $(OBJ_DIR)/$(PROJECT_NAME).asm size
 
-%.elf %.map: $(SRC_O) $(LDSCRIPT)
+$(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).map: $(OBJS) $(LDSCRIPT) Makefile
 	@echo LD: $@
-	@$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
+	@$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $(OBJ_DIR)/$(PROJECT_NAME).elf
 
 %.hex: %.elf
 	@echo OBJCOPY: $@
@@ -158,13 +158,13 @@ all: directory $(GATT_OBJ) $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(
 	@$(CC) -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(OBJ_DIR)/$(patsubst %.o,%.d,$@)
 
 flash: $(OBJ_DIR)/$(PROJECT_NAME).hex
-	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b $(COM_SPEED) --startbaud $(COM_STARTBAUD) -r wh $(OBJ_DIR)/$(PROJECT_NAME).hex
+	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b $(COM_SPEED) -r wh $(OBJ_DIR)/$(PROJECT_NAME).hex
 
 terminal:
-	@$(PYTHON) ./miniterm.py $(COM_PORT) $(UART_LOG_BPS) --rts 1 --rtstoggle 100 --exit-char 3 --rtsexit 0
+	@$(PYTHON) ./miniterm.py $(COM_PORT) $(UART_LOG_BPS) --rts 1 --rtstoggle 100 --exit-char 3 --rtsexit 1
 
-terminal_flash: flash size
-	@$(PYTHON) ./miniterm.py $(COM_PORT) $(UART_LOG_BPS) --rts 1 --rtstoggle 100 --exit-char 3 --rtsexit 0
+flash_ota:
+	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b $(COM_SPEED) -r we 0x10000 $(BIN_OTA)
 
 identify:
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b $(COM_SPEED) i
@@ -174,9 +174,6 @@ erase_and_flash:
 
 reset:
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -r i
-
-dump:
-	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b $(COM_SPEED) --startbaud $(COM_STARTBAUD) rc 0x11000000 0x00080000 ff_phy6222_512k.bin
 
 directory:
 	@mkdir -p $(OBJ_DIR)
