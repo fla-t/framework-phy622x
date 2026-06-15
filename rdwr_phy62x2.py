@@ -2,8 +2,8 @@
 
 # rdwr_phy62x2.py 11.01.2024 pvvx #
 
-import serial;
-import time;
+import serial
+import time
 import argparse
 import io
 import os
@@ -32,7 +32,7 @@ def ParseHexFile(hexfile):
 	except:
 		print('No file opened', hexfile)
 		return None
-	
+
 	table = []
 	result = bytearray()
 	addr = 0
@@ -70,13 +70,13 @@ def ParseHexFile(hexfile):
 	return table
 
 class phyflasher:
-	def __init__(self, port='COM1', start_baud=START_BAUD):
+	def __init__(self, port='COM1'):
 		self.old_erase_start = EXT_FLASH_ADD
 		self.old_erase_end = EXT_FLASH_ADD
 		self.port = port
-		self.baud = start_baud
+		self.baud = START_BAUD
 		try:
-			self._port = serial.Serial(self.port, self.baud, dsrdtr=None)
+			self._port = serial.Serial(self.port, self.baud)
 			self._port.timeout = 1
 		except Exception as e:
 			print ('Error: Open %s, %d baud! Error: %s' % (self.port, self.baud, e))
@@ -124,7 +124,7 @@ class phyflasher:
 		if mbit > 0:
 			regcmd = regcmd | 0x40000
 		if dummy > 0:
-			regcmd = regcmd | (dummy << 7);		 
+			regcmd = regcmd | (dummy << 7);
 		if not self.write_reg(0x4000c890, regcmd | 1):
 			print('Error write Flash Command Register!')
 			return False
@@ -145,10 +145,10 @@ class phyflasher:
 						return True
 					i -= 1
 				return False
-			i -= 1		
+			i -= 1
 		return False
 	def flash_read_unique_id(self):
-		if self.wr_flash_cmd(0x4B,0,0,0,4,8): # and self.flash_wait_idle(): 
+		if self.wr_flash_cmd(0x4B,0,0,0,4,8): # and self.flash_wait_idle():
 			r1 = self.read_reg(0x4000c8a0)
 			if r1 == None:
 				return None
@@ -156,19 +156,19 @@ class phyflasher:
 			if r2 == None:
 				return None
 			ret = bytearray(8)
-			ret[0] = r1 & 0xff 
-			ret[1] = (r1 >> 8) & 0xff 
-			ret[2] = (r1 >> 16) & 0xff 
-			ret[3] = (r1 >> 24) & 0xff 
-			ret[4] = r2 & 0xff 
-			ret[5] = (r2 >> 8) & 0xff 
-			ret[6] = (r2 >> 16) & 0xff 
-			ret[7] = (r2 >> 24) & 0xff 
-			return ret 
+			ret[0] = r1 & 0xff
+			ret[1] = (r1 >> 8) & 0xff
+			ret[2] = (r1 >> 16) & 0xff
+			ret[3] = (r1 >> 24) & 0xff
+			ret[4] = r2 & 0xff
+			ret[5] = (r2 >> 8) & 0xff
+			ret[6] = (r2 >> 16) & 0xff
+			ret[7] = (r2 >> 24) & 0xff
+			return ret
 		return None
 	def flash_read_status(self):
 		#Flash cmd: Read status
-		if self.wr_flash_cmd(5,0,0,0,0,1): # and self.flash_wait_idle(): 
+		if self.wr_flash_cmd(5,0,0,0,0,1): # and self.flash_wait_idle():
 			r = self.read_reg(0x4000c8a0)
 			if r == None:
 				return None
@@ -179,9 +179,9 @@ class phyflasher:
 		return self.wr_flash_cmd(6) and self.wr_flash_cmd(1, 0, 1)
 	def ReadRevision(self):
 		#0x001364c8 6222M005 #OK>>:
-		self._port.write(str.encode('rdrev+ '))
+		self._port.write(str.encode('rdrev+ '));
 		self._port.timeout = 0.1
-		read = self._port.read(26)
+		read = self._port.read(26);
 		if len(read) == 26 and read[0:2] == b'0x' and read[20:26] == b'#OK>>:':
 			print('Revision:', read[2:19])
 			if read[11:15] != b'6222':
@@ -196,9 +196,9 @@ class phyflasher:
 	def SetBaud(self, baud):
 		if self._port.baudrate != baud:
 			print ('Reopen %s port %i baud...' % (self.port, baud), end = ' '),
-			self._port.write(str.encode("uarts%i" % baud))
+			self._port.write(str.encode("uarts%i" % baud));
 			self._port.timeout = 1
-			read = self._port.read(3)
+			read = self._port.read(3);
 			if read == b'#OK':
 				print ('ok')
 				self.baud = baud
@@ -218,22 +218,21 @@ class phyflasher:
 			self._port.flushInput()
 		return True
 	def Connect(self, baud=DEF_RUN_BAUD):
-		self._port.dtr = True #TM   (lo)
-		self._port.rts = True #RSTN (lo)
+		self._port.setDTR(True) #TM   (lo)
+		self._port.setRTS(True) #RSTN (lo)
 		time.sleep(0.1)
 		self._port.flushOutput()
 		self._port.flushInput()
-		time.sleep(0.5)
-		self._port.dtr = False #TM  (hi)
-		self._port.rts = False #RSTN (hi)
+		time.sleep(0.1)
+		self._port.setDTR(False) #TM  (hi)
+		self._port.setRTS(False) #RSTN (hi)
 		self._port.timeout = 0.04
-		ttcl = 50
+		ttcl = 50;
 		fct_mode = False
 		pkt = 'UXTDWU' # UXTL16 UDLL48 UXTDWU
 		while ttcl > 0:
-			sent = self._port.write(pkt.encode())
-			read = self._port.read(6)
-			print("RX '" + read.decode("utf-8") + "'")
+			sent = self._port.write(pkt.encode());
+			read = self._port.read(6);
 			if read == b'cmd>>:' :
 				break
 			if read == b'fct>>:' :
@@ -257,15 +256,15 @@ class phyflasher:
 		if not self.FlashUnlock():
 			self._port.close()
 			exit(4)
-		if not self.write_reg(0x4000f054, 0): # PCRM->efuse_cfg
+		if not self.write_reg(0x4000f054, 0):
 			print('PHY62x2 - Error init1!')
 			self._port.close()
 			exit(4)
-		if not self.write_reg(0x4000f140, 0): # PCRM->EFUSE_PROG[0]
+		if not self.write_reg(0x4000f140, 0):
 			print('PHY62x2 - Error init2!')
 			self._port.close()
 			exit(4)
-		if not self.write_reg(0x4000f144, 0): # PCRM->EFUSE_PROG[1]
+		if not self.write_reg(0x4000f144, 0):
 			print('PHY62x2 - Error init3!')
 			self._port.close()
 			exit(4)
@@ -327,7 +326,7 @@ class phyflasher:
 				if (r & 1) == 0:
 					print ('ok')
 					return True
-				i -= 1	
+				i -= 1
 		print ('Timeout!')
 		return False
 	def EraseSectorsFlash(self, offset = 0, size = MAX_FLASH_SIZE):
@@ -403,7 +402,7 @@ class phyflasher:
 	def WriteBlockFlash(self, stream, offset = 0, size = 0x8000):
 		offset &= 0x00ffffff
 		if self.autoerase:
-			if not self.EraseSectorsFlash(offset, size):	
+			if not self.EraseSectorsFlash(offset, size):
 				return False
 		sblk = PHY_WR_BLK_SIZE
 		blkcount = (size + sblk - 1) / sblk
@@ -441,7 +440,7 @@ class phyflasher:
 		idx = 0
 		size = len(ph[1])
 		if self.autoerase:
-			if not self.EraseSectorsFlash(offset, size):	
+			if not self.EraseSectorsFlash(offset, size):
 				return False
 		sblk = PHY_WR_BLK_SIZE
 		blkcount = (size + sblk - 1) / sblk
@@ -513,7 +512,6 @@ def main():
 	parser = argparse.ArgumentParser(description='%s version %s' % (__progname__, __version__), prog = __filename__)
 	parser.add_argument('--port', '-p', help = 'Serial port device',	default='COM1');
 	parser.add_argument('--baud', '-b',	help = 'Set Port Baud (115200, 250000, 500000, 1000000)',	type = arg_auto_int, default = DEF_RUN_BAUD);
-	parser.add_argument('--startbaud', '-sb',	help = 'Set Port Start Baud (9600, 115200, 250000, 500000, 1000000)',	type = arg_auto_int, default = START_BAUD);
 
 	parser.add_argument('--allerase', '-a',  action='store_true', help = 'Pre-processing: All Chip Erase');
 	parser.add_argument('--erase', '-e',  action='store_true', help = 'Pre-processing: Erase Flash work area');
@@ -565,13 +563,13 @@ def main():
 
 	parser_read_flash = subparsers.add_parser(
 			'i', help = 'Chip Information')
-	
+
 	args = parser.parse_args()
 
 	print('=========================================================')
 	print('%s version %s' % (__progname__, __version__))
 	print('---------------------------------------------------------')
-	phy = phyflasher(args.port, args.startbaud)
+	phy = phyflasher(args.port)
 	print ('Connecting...')
 	#--------------------------------
 	if not phy.Connect(args.baud):
@@ -586,12 +584,12 @@ def main():
 	if args.operation == 'i':
 		rs = phy.flash_read_status()
 		if rs == None:
-			print ('Error Flash read Status!')			
+			print ('Error Flash read Status!')
 			sys.exit(3)
 		print ('Flash Status: 0x%02x' % rs)
 		rb = phy.flash_read_unique_id()
 		if rb == None:
-			print ('Error Flash read Unique ID!')			
+			print ('Error Flash read Unique ID!')
 			sys.exit(3)
 		print ('Flash Serial Number:', rb.hex()) # Unique ID
 	if args.operation == 'rc':
