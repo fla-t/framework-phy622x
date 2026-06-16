@@ -4,39 +4,27 @@
 #include <log/log.h>
 #include "FreeRTOS.h"
 #include "task.h"
+#include "display.h"
 
 #include "osal_nuker.h"
 
 // LED
 #define GPIO_LED GPIO_P00
 
-
 void genericTask(void *argument)
 {
     UNUSED(argument);
     LOG("Hi from genericTask");
 
-    gpio_pin_e pin = GPIO_LED;
-    hal_gpio_pin_init(pin, GPIO_INPUT);
-    hal_gpio_pull_set(pin, WEAK_PULL_UP);
+    display_init(NV3022B_WIDTH, NV3022B_HEIGHT, 0);
 
-    PWMN_e pwmN = PWM_CH1;
-    hal_pwm_init(pwmN, PWM_CLK_DIV_128, PWM_CNT_UP, PWM_POLARITY_RISING, pin);
-    hal_pwm_set_count_top_val(pwmN, 0, 256);
-    hal_pwm_enable();
+    /* Calibration: 1px red border on black, hugging all four logical edges.
+     * If every side sits flush with the panel, the GRAM offsets are right. */
+    display_fill(NV3022B_BLACK);
+    display_draw_border(NV3022B_RED);
 
-    uint16_t val = 0;
-
-    while(1)
-    {
-        if (val++ == 256)
-        {
-            val = 0;
-        }
-        hal_pwm_set_count_val(pwmN, val);
-
-        vTaskDelay(pdMS_TO_TICKS(50));
-    }
+    for (;;)
+        vTaskDelay(pdMS_TO_TICKS(1000));
 }
 
 int main(void)

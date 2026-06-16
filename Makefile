@@ -11,12 +11,13 @@ COM_STARTBAUD = 115200
 UART_LOG_BPS = 115200
 ##############################################################################
 # Source
-SRC_PATH = ./src/
-SRC_PRJ = main.c
+SRC_PATH = ./src
 
 INCLUDES = -I$(SRC_PATH)
 
-SRCS = $(addprefix $(SRC_PATH)/, $(SRC_PRJ))
+# Pick up every .c under src/ automatically (recurses into subfolders too),
+# so new source files don't need to be listed by hand.
+SRCS = $(shell find $(SRC_PATH) -name '*.c')
 ##############################################################################
 DEFINES = -D__GCC
 DEFINES += $(PROJECT_DEFS)
