@@ -4,7 +4,7 @@
 #include <log/log.h>
 #include "FreeRTOS.h"
 #include "task.h"
-#include "display.h"
+#include "display/display.h"
 
 #include "osal_nuker.h"
 
