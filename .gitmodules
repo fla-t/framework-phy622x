@@ -1,0 +1,3 @@
+[submodule "src/display"]
+	path = src/display
+	url = git@github.com:fla-t/NV3022B-Display-Driver.git
