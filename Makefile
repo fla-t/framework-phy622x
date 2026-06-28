@@ -118,6 +118,13 @@ endif
 
 ##############################################################################
 
+DISPLAY_DRIVER_PATH = ./nv3022b-driver
+INCLUDES += -I$(DISPLAY_DRIVER_PATH)/include
+SRCS     += $(DISPLAY_DRIVER_PATH)/src/display.c
+
+
+##############################################################################
+
 CFLAGS  += $(DEFINES) $(INCLUDES)
 
 SRC_O = $(SRCS:%.c=%.o) $(STARTUP_ASM:%.s=%.o)
